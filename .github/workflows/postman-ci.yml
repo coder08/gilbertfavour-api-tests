@@ -1,0 +1,32 @@
+name: Postman CI
+
+on:
+  push:
+    branches: ["dev"]
+  pull_request:
+    branches: ["master", "main"]
+
+jobs:
+  run-postman:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Postman CLI
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+
+      - name: Run collection (CLI) with environment file
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+        run: |
+          mkdir -p results
+          postman collection run "postman/reqres-api-tests.postman_collection.json" --environment "postman/reqres-env.postman_environment.json" --reporters cli,junit,json --reporter-junit-export results/junit.xml --reporter-json-export results/report.json
+
+      - name: Upload results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: postman-results
+          path: results

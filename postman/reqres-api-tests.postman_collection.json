@@ -1,0 +1,368 @@
+{
+  "info": {
+    "name": "reqres-api-tests (starter)",
+    "_postman_id": "85f325ec-a51a-4083-8856-99c81e99d439",
+    "description": "Starter collection for ReqRes API automation: 2 GET, 2 POST (incl. negative), 1 PUT, 1 PATCH, 1 DELETE. Uses variables and runnable end-to-end.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Main Flow",
+      "item": [
+        {
+          "name": "POST - Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"{{name}}\", \"job\": \"{{job}}\"}"
+            },
+            "description": "Creates a user (fake) on ReqRes. Positive test."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function(){ pm.response.to.have.status(201); });",
+                  "pm.test('Status text is Created', function(){ pm.expect(pm.response.status).to.eql('Created'); });",
+                  "const json = pm.response.json();",
+                  "pm.test('Response has id, name, job', function(){",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json.name).to.eql(pm.variables.get('name'));",
+                  "  pm.expect(json.job).to.eql(pm.variables.get('job'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Get Single User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "description": "Fetch a real user with id {{user_id}} (defaults to 2). Positive test."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function(){ pm.response.to.have.status(200); });",
+                  "pm.test('Status text is OK', function(){ pm.expect(pm.response.status).to.eql('OK'); });",
+                  "const json = pm.response.json();",
+                  "pm.test('Body has data.id and email', function(){",
+                  "  pm.expect(json).to.have.property('data');",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('email');",
+                  "});",
+                  "// Keep user_id in collection variables to ensure PUT/PATCH/DELETE hit a valid user",
+                  "pm.collectionVariables.set('user_id', String(pm.response.json().data.id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - List Users (page={{page}})",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/users?page={{page}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}"
+                }
+              ]
+            },
+            "description": "List users for the given page. Positive test."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function(){ pm.response.to.have.status(200); });",
+                  "pm.test('Status text is OK', function(){ pm.expect(pm.response.status).to.eql('OK'); });",
+                  "const json = pm.response.json();",
+                  "pm.test('Array data is present', function(){",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});",
+                  "pm.test('Page matches variable', function(){",
+                  "  pm.expect(json.page).to.eql(Number(pm.variables.get('page')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT - Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"{{name}}\", \"job\": \"zion resident\"}"
+            },
+            "description": "Full update on user {{user_id}}. Positive test."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function(){ pm.response.to.have.status(200); });",
+                  "pm.test('Status text is OK', function(){ pm.expect(pm.response.status).to.eql('OK'); });",
+                  "const json = pm.response.json();",
+                  "pm.test('Updated name and job returned', function(){",
+                  "  pm.expect(json.name).to.eql(pm.variables.get('name'));",
+                  "  pm.expect(json.job).to.eql('zion resident');",
+                  "});",
+                  "pm.test('updatedAt exists', function(){ pm.expect(json).to.have.property('updatedAt'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH - Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"job\": \"rebel mechanic\"}"
+            },
+            "description": "Partial update on user {{user_id}}. Positive test."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function(){ pm.response.to.have.status(200); });",
+                  "pm.test('Status text is OK', function(){ pm.expect(pm.response.status).to.eql('OK'); });",
+                  "const json = pm.response.json();",
+                  "pm.test('Job updated', function(){ pm.expect(json.job).to.eql('rebel mechanic'); });",
+                  "pm.test('updatedAt exists', function(){ pm.expect(json).to.have.property('updatedAt'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE - Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "description": "Delete user {{user_id}}. Positive test."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 204', function(){ pm.response.to.have.status(204); });",
+                  "pm.test('Status text is No Content', function(){ pm.expect(pm.response.status).to.eql('No Content'); });",
+                  "pm.test('Empty body', function(){ pm.expect(pm.response.text()).to.eql(''); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Negative Tests",
+      "item": [
+        {
+          "name": "POST - Register (missing password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{email}}\"}"
+            },
+            "description": "Negative: missing password returns 400 with error."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function(){ pm.response.to.have.status(400); });",
+                  "pm.test('Status text is Bad Request', function(){ pm.expect(pm.response.status).to.eql('Bad Request'); });",
+                  "const json = pm.response.json();",
+                  "pm.test('Error mentions Missing password', function(){",
+                  "  pm.expect(json.error).to.include('Missing');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Get Single User (not found)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/users/23",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "23"
+              ]
+            },
+            "description": "Negative: user id 23 does not exist."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function(){ pm.response.to.have.status(404); });",
+                  "pm.test('Status text is Not Found', function(){ pm.expect(pm.response.status).to.eql('Not Found'); });",
+                  "pm.test('Empty object', function(){",
+                  "  try { const json = pm.response.json(); pm.expect(Object.keys(json).length).to.eql(0); }",
+                  "  catch(e) { pm.expect(pm.response.text()).to.eql('{}'); }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://reqres.in"
+    },
+    {
+      "key": "user_id",
+      "value": "2"
+    },
+    {
+      "key": "name",
+      "value": "morpheus"
+    },
+    {
+      "key": "job",
+      "value": "leader"
+    },
+    {
+      "key": "email",
+      "value": "eve.holt@reqres.in"
+    },
+    {
+      "key": "page",
+      "value": "2"
+    }
+  ]
+}
